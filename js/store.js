@@ -2,6 +2,18 @@
 import { MODE, FIREBASE, COLL } from './config.js';
 
 const COLLECTIONS = ['references', 'gies', 'lignes', 'lots'];
+
+// Paramètres par défaut d'une édition (complétés par ceux enregistrés)
+export const PARAMETRES_DEFAUT = {
+  ordreMetaux: ['Bronze', 'Argent', 'Or', 'Platine'],
+  sheetUrl: 'https://docs.google.com/spreadsheets/d/1OCOyLNPjlPmBOTvhcZuzaEjXC0R2RaYrAd1ij2xFtbc/edit',
+  sheetOnglet: 'CATEGORIES CONFONDUES',
+  expediteurNom: 'Julia – Smartshop',
+  mailObjet: 'Réussites Orpi {edition} – vos informations de livraison ({gie})',
+  mailCorps: "Bonjour {prenom},\n\nLes trophées Réussites {edition} de votre région ({gie}) sont en préparation : {nb} trophées au total.\n\nPouvez-vous nous indiquer la date de livraison souhaitée, l'adresse de livraison et le contact sur place via ce formulaire :\n{lien}\n\nMerci d'avance,\n{expediteur}",
+  relanceObjet: 'Relance – Réussites Orpi {edition} : vos informations de livraison ({gie})',
+  relanceCorps: "Bonjour {prenom},\n\nSauf erreur de notre part, nous n'avons pas encore reçu vos informations de livraison pour les trophées Réussites {edition} ({nb} trophées).\n\nVoici le lien du formulaire :\n{lien}\n\nMerci d'avance,\n{expediteur}",
+};
 const FB = 'https://www.gstatic.com/firebasejs/10.12.2';
 const ecouteurs = new Set();
 let etat = null;
@@ -62,7 +74,7 @@ const demo = {
       };
       lsSet(cle(edition), data);
     }
-    if (!data) data = { parametres: { edition }, references: {}, gies: {}, lignes: {}, lots: {}, journal: [] };
+    if (!data) data = { parametres: { ...PARAMETRES_DEFAUT, edition }, references: {}, gies: {}, lignes: {}, lots: {}, journal: [] };
     window.addEventListener('storage', e => {
       if (e.key === cle(this.edition) && e.newValue) { etat = JSON.parse(e.newValue); notifier(); }
     });
@@ -117,7 +129,7 @@ async function firestore() {
       const colls = role === 'usine' ? ['references', 'lots'] : COLLECTIONS;
       const premiers = [];
       const attendre = (q, cb) => new Promise(res => { let ok = false; F.onSnapshot(q, s => { cb(s); if (!ok) { ok = true; res(); } else { etat && notifier(); } }, err => { console.error(err); res(); }); });
-      premiers.push(attendre(base(), s => { data.parametres = s.exists() ? s.data() : { edition: ed }; if (etat) etat.parametres = data.parametres; }));
+      premiers.push(attendre(base(), s => { data.parametres = { ...PARAMETRES_DEFAUT, edition: ed, ...(s.exists() ? s.data() : {}) }; if (etat) etat.parametres = data.parametres; }));
       for (const c of colls) {
         const q = role === 'usine' && c === 'lots'
           ? F.query(F.collection(base(), c), F.where('statut', 'in', ['envoye', 'fabrication', 'expedie', 'recu']))
