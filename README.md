@@ -47,18 +47,36 @@ L'outil suit la même installation que « Étude des commandes » :
 
 Le dépôt ne contient aucune donnée : le dossier `data/` est exclu par `.gitignore`, car il contient les noms des lauréats.
 
-## Réglages à faire une fois dans Firebase / Google Cloud (projet smartshop-catalogues)
+## Service d'envoi (Railway) — e-mails et Google Sheet au nom de celia@smartshop.fr
 
-1. **Règles Firestore** : dans la console Firebase, ouvrir Firestore › Règles. Coller le contenu de `firestore-regles-reussites.rules` à l'intérieur du bloc `match /databases/{database}/documents { … }`, sans toucher aux règles des autres outils, puis cliquer sur Publier.
-2. **Authentication › Méthodes de connexion** :
-   - Google est normalement déjà actif ;
-   - activer *Adresse e-mail/Mot de passe*, avec l'option *Lien par e-mail*, pour la cliente et Laser Style ;
-   - vérifier que `smartshop-ia.github.io` figure dans *Domaines autorisés*.
-3. **Google Cloud** (console.cloud.google.com, projet smartshop-catalogues) :
-   - activer l'**API Google Sheets** et l'**API Gmail** ;
-   - dans *Écran de consentement OAuth*, un type **Interne** évite toute validation Google pour les comptes smartshop.fr.
+Le dossier `api/` contient un petit service Node, sans dépendance, déployé sur Railway. Il agit au nom de **celia@smartshop.fr** :
 
-Sans l'étape 3, l'outil fonctionne quand même. Il faut alors importer le fichier de la cliente à la main (Paramètres › Importer un fichier) et envoyer les formulaires soi-même.
+- il lit le Google Sheet de la cliente : c'est le compte de Célia qui doit y avoir accès ;
+- il envoie les formulaires de livraison depuis la boîte Gmail de Célia. Les e-mails apparaissent dans ses « Envoyés » et les réponses arrivent chez elle.
+
+Seule l'équipe peut appeler le service. Il vérifie la connexion Firebase de la personne : un compte @smartshop.fr, ou un rôle `editor` dans `authorizedUsers`.
+
+Mise en place (une fois) :
+
+1. **Google Cloud**, projet smartshop-catalogues :
+   - activer l'API Gmail et l'API Google Sheets ;
+   - créer le compte de service `reussites-orpi-envoi` et générer une clé JSON.
+2. **Console d'administration Google Workspace** (admin.google.com) :
+   - aller dans Sécurité › Accès et contrôle des données › Commandes des API › Délégation au niveau du domaine ;
+   - ajouter l'ID client du compte de service avec les champs d'application :
+     `https://www.googleapis.com/auth/gmail.send,https://www.googleapis.com/auth/spreadsheets.readonly`
+3. **Railway** :
+   - créer un service depuis le dépôt GitHub, avec `/api` comme dossier racine ;
+   - ajouter la variable `GOOGLE_SA_KEY`, qui contient tout le JSON de la clé. Facultatif : `COMPTE_DELEGUE` (celia@smartshop.fr par défaut) ;
+   - générer un domaine public.
+4. Recopier l'adresse du service dans `js/config.js`, dans la constante `API_URL`.
+
+Quand `API_URL` est vide, l'outil utilise le compte Google de la personne connectée.
+
+## Réglages à faire une fois dans Firebase (projet smartshop-catalogues)
+
+1. **Règles Firestore** : dans la console Firebase, ouvrir Firestore › Règles. Coller le contenu de `firestore-regles-reussites.rules` à l'intérieur du bloc `match /databases/{database}/documents { … }`, puis cliquer sur Publier. *Fait le 03/11/2026.*
+2. **Authentication** : Google, et adresse e-mail avec lien de connexion. Le domaine `smartshop-ia.github.io` doit être autorisé. *Fait.*
 
 ## Premier lancement
 
@@ -68,7 +86,7 @@ Sans l'étape 3, l'outil fonctionne quand même. Il faut alors importer le fichi
    - pour tester avec 2026, utiliser « Charger le jeu de test 2026 » avec `seed-2026.json` ;
    - ajouter les accès de la cliente et de Laser Style. Ils se connecteront avec un lien reçu par e-mail.
 
-Le compte Google connecté doit avoir accès au Google Sheet de la cliente. Les e-mails du formulaire partent de sa boîte Gmail.
+Le compte celia@smartshop.fr doit avoir accès au Google Sheet de la cliente.
 
 ## Édition 2027
 

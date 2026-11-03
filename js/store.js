@@ -8,7 +8,7 @@ export const PARAMETRES_DEFAUT = {
   ordreMetaux: ['Bronze', 'Argent', 'Or', 'Platine'],
   sheetUrl: 'https://docs.google.com/spreadsheets/d/1OCOyLNPjlPmBOTvhcZuzaEjXC0R2RaYrAd1ij2xFtbc/edit',
   sheetOnglet: 'CATEGORIES CONFONDUES',
-  expediteurNom: 'Julia – Smartshop',
+  expediteurNom: 'Célia – Smartshop',
   mailObjet: 'Réussites Orpi {edition} – vos informations de livraison ({gie})',
   mailCorps: "Bonjour {prenom},\n\nLes trophées Réussites {edition} de votre région ({gie}) sont en préparation : {nb} trophées au total.\n\nPouvez-vous nous indiquer la date de livraison souhaitée, l'adresse de livraison et le contact sur place via ce formulaire :\n{lien}\n\nMerci d'avance,\n{expediteur}",
   relanceObjet: 'Relance – Réussites Orpi {edition} : vos informations de livraison ({gie})',

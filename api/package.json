@@ -1,0 +1,9 @@
+{
+  "name": "reussites-orpi-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Envoi des e-mails et lecture du Google Sheet client au nom de celia@smartshop.fr",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": { "start": "node server.mjs" }
+}

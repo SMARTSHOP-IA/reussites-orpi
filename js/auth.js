@@ -75,6 +75,13 @@ export async function deconnexion() {
   await A.signOut(auth);
 }
 
+// Jeton Firebase de la personne connectée (pour le service d'envoi)
+export async function jetonFirebase() {
+  await charger();
+  if (!auth.currentUser) throw new Error('Connexion requise');
+  return auth.currentUser.getIdToken();
+}
+
 function memoriserJeton(t) {
   if (t) sessionStorage.setItem('reussites:jetonGoogle', JSON.stringify({ t, exp: Date.now() + 55 * 60 * 1000 }));
 }

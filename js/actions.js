@@ -4,9 +4,9 @@ import {
   lireSource, comparer, appliquer, effectif, CHAMPS, CHAMPS_TROPHEE, agenceAffichee, norm, jeton, METAUX, normGie,
 } from './logic.js';
 import { calculer } from './model.js';
-import { MODE } from './config.js';
+import { MODE, API_URL, COMPTE_ENVOI } from './config.js';
 import { jetonGoogle } from './auth.js';
-import { lireSheet, envoyerMail } from './google.js';
+import { lireSheet, envoyerMail, appelerService } from './google.js';
 
 export const session = { user: null };
 const auteur = () => session.user?.nom || session.user?.email || 'Inconnu';
@@ -24,6 +24,7 @@ function verifierDroits() {
 export async function lireFichierClientGoogle(interactif) {
   const p = E().parametres;
   if (!p.sheetUrl) throw new Error('Lien du Google Sheet client non renseigné (Paramètres)');
+  if (API_URL) return (await appelerService('/sheet', { url: p.sheetUrl, onglet: p.sheetOnglet })).values;
   const t = await jetonGoogle(interactif);
   if (!t) return null;
   return lireSheet(p.sheetUrl, p.sheetOnglet, t);
@@ -200,14 +201,14 @@ export async function envoyerFormulaire(code, { relance = false, previsualiser =
     reponduLe: existant?.reponduLe || null, envoyeLe: maintenant(),
   });
   if (MODE !== 'demo') {
-    const t = await jetonGoogle(true);
-    await envoyerMail(message, t);
+    if (API_URL) await appelerService('/mail', { ...message, nomExpediteur: p.expediteurNom });
+    else await envoyerMail(message, await jetonGoogle(true));
   }
   const f = g.formulaire || {};
   const { valideLe, reponduLe, reprise2026, ...fBase } = f;
   g.formulaire = { ...(relance ? f : fBase), token, statut: f.statut === 'repondu' ? 'repondu' : 'envoye', envoyeLe: f.envoyeLe && relance ? f.envoyeLe : maintenant(), relances: relance ? [...(f.relances || []), maintenant()] : (f.relances || []) };
   await store.ecrire([{ type: 'set', coll: 'gies', id: code, data: g }]);
-  await store.journaliser([{ date: maintenant(), auteur: auteur(), type: 'formulaire', gie: code, nom: g.nom, changements: [{ champ: 'formulaire', avant: '', apres: `${relance ? 'Relance envoyée' : 'Formulaire envoyé'} à ${g.contact.email}${MODE === 'demo' ? ' (simulation)' : ''}` }], trophee: false }]);
+  await store.journaliser([{ date: maintenant(), auteur: auteur(), type: 'formulaire', gie: code, nom: g.nom, changements: [{ champ: 'formulaire', avant: '', apres: `${relance ? 'Relance envoyée' : 'Formulaire envoyé'} à ${g.contact.email}${MODE === 'demo' ? ' (simulation)' : API_URL ? ` depuis ${COMPTE_ENVOI}` : ''}` }], trophee: false }]);
   return { message, token };
 }
 

@@ -4,7 +4,8 @@ import { majParametres, synchroniser, lireFichierClientGoogle, nouvelleEdition }
 import { exporterTout } from '../exports.js';
 import { lireXlsx, lireCsv } from '../xlsx.js';
 import { store } from '../store.js';
-import { MODE, DOMAINE_EQUIPE } from '../config.js';
+import { MODE, DOMAINE_EQUIPE, API_URL, COMPTE_ENVOI } from '../config.js';
+import { etatService } from '../google.js';
 import { ROLES } from '../auth.js';
 
 let accesCache = null;
@@ -28,6 +29,7 @@ export function vueParametres(root, ctx) {
       ${MODE === 'demo' ? `<hr><h3>Tester la synchronisation (mode démo)</h3><p class="petit-texte">Simule une mise à jour du fichier par la cliente : 2 ajouts, 1 changement de métal sur un trophée déjà produit, 1 suppression et 1 nom corrigé différemment de ta correction (conflit).</p><button class="btn" id="simuler">Simuler des modifications de la cliente</button>` : ''}
     </section>
     <section class="carte"><h2>E-mails du formulaire de livraison</h2>
+      <p class="petit-texte">${API_URL ? `Les e-mails partent de la boîte <b>${h(COMPTE_ENVOI)}</b> (copie dans ses « Envoyés », réponses chez elle) et le Google Sheet de la cliente est lu avec ce même compte. <span id="etat-service"></span>` : 'Les e-mails partent de la boîte Gmail de la personne connectée.'}</p>
       <form id="f-mail" class="grille-form">
         <label class="large">Signature (expéditeur)<input name="expediteurNom" value="${h(p.expediteurNom || '')}"></label>
         <label class="large">Objet du 1er envoi<input name="mailObjet" value="${h(p.mailObjet || '')}"></label>
@@ -129,6 +131,10 @@ export function vueParametres(root, ctx) {
     if (!(await confirmer('Effacer toutes les modifications faites en démo et recharger les données 2026 d\'origine ?', 'Réinitialiser'))) return;
     store.reinitialiserDemo(); sessionStorage.removeItem('reussites:edition'); location.hash = ''; location.reload();
   });
+  if (API_URL && MODE !== 'demo') {
+    etatService().then(e => { const z = root.querySelector('#etat-service'); if (z) z.innerHTML = e.pret ? '<span class="pastille vert">Service d\'envoi opérationnel</span>' : '<span class="pastille rouge">Service d\'envoi non configuré</span>'; })
+      .catch(() => { const z = root.querySelector('#etat-service'); if (z) z.innerHTML = '<span class="pastille rouge">Service d\'envoi injoignable</span>'; });
+  }
   if (paramHash('import')) root.querySelector('#import').scrollIntoView();
 }
 

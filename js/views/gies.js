@@ -3,7 +3,7 @@ import { agir, paramHash, compteMetaux, badgeForm, badgeExpe, pastille } from '.
 import { majGie, ordonnerGies, envoyerFormulaire, validerReponse, agencesDuGie, affecterAdresse, lienFormulaire } from '../actions.js';
 import { store } from '../store.js';
 import { STATUTS_BAT } from '../model.js';
-import { MODE } from '../config.js';
+import { MODE, COMPTE_ENVOI } from '../config.js';
 
 const F = { texte: '', statut: '' };
 
@@ -193,9 +193,9 @@ export async function ouvrirGie(ctx, code) {
 
 async function apercuMail(m, token, envoye) {
   await modale(envoye ? 'E-mail préparé (mode démo : rien n\'est envoyé)' : 'Aperçu de l\'e-mail', `
-    <p><b>À :</b> ${h(m.a)}<br><b>Objet :</b> ${h(m.objet)}</p>
+    <p><b>De :</b> ${h(COMPTE_ENVOI)}<br><b>À :</b> ${h(m.a)}<br><b>Objet :</b> ${h(m.objet)}</p>
     <pre class="mail">${h(m.corps)}</pre>
-    ${envoye ? `<p class="petit-texte">En production, cet e-mail part de ta boîte Gmail. <a href="${lienFormulaire(token)}" target="_blank">Ouvrir le formulaire comme le contact GIE</a></p>` : '<p class="petit-texte">Le texte se modifie dans Paramètres.</p>'}`);
+    ${envoye ? `<p class="petit-texte">En production, cet e-mail part de la boîte ${h(COMPTE_ENVOI)}. <a href="${lienFormulaire(token)}" target="_blank">Ouvrir le formulaire comme le contact GIE</a></p>` : '<p class="petit-texte">Le texte se modifie dans Paramètres.</p>'}`);
 }
 
 export { pastille };

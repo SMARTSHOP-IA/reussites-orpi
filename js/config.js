@@ -10,6 +10,11 @@ export const FIREBASE = {
   appId: '1:161620663653:web:8a89f06f89597b57d9d58c',
 };
 
+// Service d'envoi (Railway) : lit le Google Sheet client et envoie les e-mails au nom du compte ci-dessous.
+// Vide = utilisation du compte Google de la personne connectée.
+export const API_URL = '';
+export const COMPTE_ENVOI = 'celia@smartshop.fr';
+
 // Collections Firestore de l'outil (préfixées pour cohabiter avec les autres outils du projet).
 export const COLL = { editions: 'reussites_editions', formulaires: 'reussites_formulaires', acces: 'reussites_acces' };
 

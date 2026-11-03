@@ -1,5 +1,26 @@
 // Appels aux API Google avec le jeton de l'utilisateur connecté (aucun serveur intermédiaire).
 
+import { API_URL } from './config.js';
+import { jetonFirebase } from './auth.js';
+
+// Appel au service d'envoi (compte délégué) avec le jeton Firebase de l'utilisateur.
+export async function appelerService(chemin, donnees) {
+  const r = await fetch(`${API_URL.replace(/\/$/, '')}${chemin}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${await jetonFirebase()}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(donnees || {}),
+  });
+  let j = {};
+  try { j = await r.json(); } catch { /* réponse vide */ }
+  if (!r.ok) throw new Error(j.erreur || `Service d'envoi : erreur ${r.status}`);
+  return j;
+}
+
+export async function etatService() {
+  const r = await fetch(`${API_URL.replace(/\/$/, '')}/`);
+  return r.json();
+}
+
 export function idDepuisUrl(url) {
   const m = String(url || '').match(/\/d\/([a-zA-Z0-9-_]{20,})/);
   return m ? m[1] : String(url || '').trim();

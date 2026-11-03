@@ -1,4 +1,4 @@
-import { MODE, EDITION_PAR_DEFAUT } from './config.js';
+import { MODE, EDITION_PAR_DEFAUT, API_URL } from './config.js';
 import { store } from './store.js';
 import { calculer } from './model.js';
 import { h, toast, nombre, dateFr } from './ui.js';
@@ -133,7 +133,8 @@ async function verifier(interactif) {
 }
 
 async function verificationAuto() {
-  if (MODE !== 'demo') {
+  if (MODE !== 'demo' && API_URL) await verifier(false);
+  else if (MODE !== 'demo') {
     const t = await jetonGoogle(false);
     if (t) await verifier(false);
     else toast('Pour vérifier automatiquement le fichier client, reconnectez Google : bouton « Vérifier maintenant » en haut.', 'info', 8000);
