@@ -6,7 +6,7 @@ const COLLECTIONS = ['references', 'gies', 'lignes', 'lots'];
 // Paramètres par défaut d'une édition (complétés par ceux enregistrés)
 export const PARAMETRES_DEFAUT = {
   ordreMetaux: ['Bronze', 'Argent', 'Or', 'Platine'],
-  sheetUrl: 'https://docs.google.com/spreadsheets/d/1OCOyLNPjlPmBOTvhcZuzaEjXC0R2RaYrAd1ij2xFtbc/edit',
+  sheetUrl: 'https://docs.google.com/spreadsheets/d/10Aec1H0UgXsWvCVs5C4PuFec8vN4-dcxOaUZmafEOX4/edit',
   sheetOnglet: 'CATEGORIES CONFONDUES',
   expediteurNom: 'Célia – Smartshop',
   mailObjet: 'Réussites Orpi {edition} – vos informations de livraison ({gie})',

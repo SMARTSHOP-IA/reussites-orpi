@@ -187,7 +187,7 @@ const seed = {
   parametres: {
     edition: '2026',
     ordreMetaux: ['Bronze', 'Argent', 'Or', 'Platine'],
-    sheetUrl: 'https://docs.google.com/spreadsheets/d/1OCOyLNPjlPmBOTvhcZuzaEjXC0R2RaYrAd1ij2xFtbc/edit',
+    sheetUrl: 'https://docs.google.com/spreadsheets/d/10Aec1H0UgXsWvCVs5C4PuFec8vN4-dcxOaUZmafEOX4/edit',
     sheetOnglet: 'CATEGORIES CONFONDUES',
     derniereSynchro: null,
     expediteurNom: 'Célia – Smartshop',
