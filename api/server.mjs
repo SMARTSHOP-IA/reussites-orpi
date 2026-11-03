@@ -11,7 +11,21 @@
 import http from 'node:http';
 import crypto from 'node:crypto';
 
-const CLE = JSON.parse(process.env.GOOGLE_SA_KEY || '{}');
+// GOOGLE_SA_KEY accepte le fichier JSON complet de la clé, ou seulement la valeur « private_key ».
+const COMPTE_SERVICE = process.env.COMPTE_SERVICE || 'reussites-orpi-envoi@smartshop-catalogues.iam.gserviceaccount.com';
+function lireCle(brut) {
+  let v = String(brut || '').trim();
+  if (!v) return {};
+  if (/^["']/.test(v) && /["']$/.test(v)) v = v.slice(1, -1);
+  if (v.startsWith('{')) {
+    try { return JSON.parse(v); } catch (e) { console.error('GOOGLE_SA_KEY : JSON illisible', e.message); return {}; }
+  }
+  const pem = v.replace(/\\n/g, '\n');
+  if (pem.includes('PRIVATE KEY')) return { client_email: COMPTE_SERVICE, private_key: pem };
+  console.error('GOOGLE_SA_KEY : format non reconnu');
+  return {};
+}
+const CLE = lireCle(process.env.GOOGLE_SA_KEY);
 const DELEGUE = process.env.COMPTE_DELEGUE || 'celia@smartshop.fr';
 const PROJET = process.env.FIREBASE_PROJECT || 'smartshop-catalogues';
 const ORIGINES = (process.env.ORIGINES || 'https://smartshop-ia.github.io').split(',').map(s => s.trim());
@@ -24,7 +38,7 @@ const b64url = b => Buffer.from(b).toString('base64').replace(/\+/g, '-').replac
 let cache = { jeton: null, exp: 0 };
 async function jetonDelegue() {
   if (cache.jeton && cache.exp > Date.now() + 60_000) return cache.jeton;
-  if (!CLE.private_key) throw erreur(500, 'GOOGLE_SA_KEY manquante sur le service');
+  if (!CLE.private_key) throw erreur(500, 'Clé GOOGLE_SA_KEY manquante ou illisible sur le service Railway');
   const t = Math.floor(Date.now() / 1000);
   const entete = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
   const corps = b64url(JSON.stringify({ iss: CLE.client_email, sub: DELEGUE, scope: SCOPES.join(' '), aud: 'https://oauth2.googleapis.com/token', iat: t, exp: t + 3600 }));
