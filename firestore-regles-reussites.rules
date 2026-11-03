@@ -1,0 +1,72 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Réussites Orpi — règles à AJOUTER dans les règles Firestore du projet
+// smartshop-catalogues (console Firebase › Firestore › Règles), à l'intérieur de :
+//     match /databases/{database}/documents { … }
+// Ne rien supprimer des règles existantes des autres outils : coller ce bloc
+// juste avant la dernière accolade fermante de ce « match », puis Publier.
+//
+//  - équipe  : compte Google vérifié @smartshop.fr → lecture et écriture
+//  - cliente : e-mail listé dans reussites_acces avec role "client" → lecture seule, sans la vue usine
+//  - usine   : e-mail listé dans reussites_acces avec role "usine" → lots envoyés + références
+//  - formulaire de livraison : lecture d'un document par son jeton (non listable), réponse uniquement
+// ─────────────────────────────────────────────────────────────────────────────
+
+    function roEmail() { return request.auth.token.email.lower(); }
+    function roEquipe() {
+      return request.auth != null && request.auth.token.email_verified == true
+        && roEmail().matches('.*@smartshop[.]fr$');
+    }
+    function roRole() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/reussites_acces/$(roEmail()))
+        ? get(/databases/$(database)/documents/reussites_acces/$(roEmail())).data.role : '';
+    }
+    function roClient() { return roRole() == 'client'; }
+    function roUsine() { return roRole() == 'usine'; }
+
+    match /reussites_acces/{e} {
+      allow read: if roEquipe() || (request.auth != null && e == roEmail());
+      allow write: if roEquipe();
+    }
+
+    match /reussites_editions/{ed} {
+      allow read: if roEquipe() || roClient() || roUsine();
+      allow write: if roEquipe();
+
+      match /references/{id} {
+        allow read: if roEquipe() || roClient() || roUsine();
+        allow write: if roEquipe();
+      }
+      match /gies/{id} {
+        allow read: if roEquipe() || roClient();
+        allow write: if roEquipe();
+      }
+      match /lignes/{id} {
+        allow read: if roEquipe() || roClient();
+        allow write: if roEquipe();
+      }
+      match /journal/{id} {
+        allow read: if roEquipe() || roClient();
+        allow create: if roEquipe();
+        allow update, delete: if false;
+      }
+      match /lots/{id} {
+        allow read: if roEquipe() || (roUsine() && resource.data.statut in ['envoye', 'fabrication', 'expedie', 'recu']);
+        allow create, delete: if roEquipe();
+        allow update: if roEquipe()
+          || (roUsine()
+              && resource.data.statut in ['envoye', 'fabrication', 'expedie']
+              && request.resource.data.statut in ['envoye', 'fabrication', 'expedie']
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['statut', 'usine']));
+      }
+    }
+
+    match /reussites_formulaires/{jeton} {
+      allow get: if true;
+      allow list: if false;
+      allow create, delete: if roEquipe();
+      allow update: if roEquipe()
+        || (resource.data.statut in ['envoye', 'repondu']
+            && request.resource.data.statut == 'repondu'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reponse', 'statut', 'reponduLe']));
+    }
