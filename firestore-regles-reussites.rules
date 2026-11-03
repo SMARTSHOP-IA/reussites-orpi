@@ -4,8 +4,9 @@
 //     match /databases/{database}/documents { … }
 // Ne rien supprimer des règles existantes des autres outils : coller ce bloc
 // juste avant la dernière accolade fermante de ce « match », puis Publier.
+// Utilise les fonctions isAuthorized() et getRole() déjà définies dans ces règles.
 //
-//  - équipe  : compte Google vérifié @smartshop.fr → lecture et écriture
+//  - équipe  : compte Google vérifié @smartshop.fr, ou role "editor" dans authorizedUsers → lecture et écriture
 //  - cliente : e-mail listé dans reussites_acces avec role "client" → lecture seule, sans la vue usine
 //  - usine   : e-mail listé dans reussites_acces avec role "usine" → lots envoyés + références
 //  - formulaire de livraison : lecture d'un document par son jeton (non listable), réponse uniquement
@@ -13,8 +14,9 @@
 
     function roEmail() { return request.auth.token.email.lower(); }
     function roEquipe() {
-      return request.auth != null && request.auth.token.email_verified == true
-        && roEmail().matches('.*@smartshop[.]fr$');
+      return (request.auth != null && request.auth.token.email_verified == true
+              && roEmail().matches('.*@smartshop[.]fr$'))
+        || (isAuthorized() && getRole() == 'editor');
     }
     function roRole() {
       return request.auth != null

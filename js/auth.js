@@ -24,6 +24,11 @@ async function charger() {
 async function roleDe(user) {
   const email = (user.email || '').toLowerCase();
   if (email.endsWith(`@${DOMAINE_EQUIPE}`) && user.emailVerified) return 'equipe';
+  // Comme les autres outils : un rôle « editor » dans authorizedUsers donne l'accès équipe.
+  try {
+    const u = await F.getDoc(F.doc(db, 'authorizedUsers', user.email));
+    if (u.exists() && u.data().role === 'editor') return 'equipe';
+  } catch { /* pas dans la liste */ }
   const s = await F.getDoc(F.doc(db, COLL.acces, email));
   return s.exists() ? s.data().role : null;
 }
