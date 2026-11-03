@@ -69,7 +69,7 @@ Mise en place (une fois) :
    - créer un service depuis le dépôt GitHub, avec `/api` comme dossier racine ;
    - ajouter la variable `GOOGLE_SA_KEY`, qui contient tout le JSON de la clé. Facultatif : `COMPTE_DELEGUE` (celia@smartshop.fr par défaut) ;
    - générer un domaine public.
-4. Recopier l'adresse du service dans `js/config.js`, dans la constante `API_URL`.
+4. Adresse du service (déjà renseignée dans `js/config.js`, constante `API_URL`) : https://reussites-orpi-production.up.railway.app
 
 Quand `API_URL` est vide, l'outil utilise le compte Google de la personne connectée.
 

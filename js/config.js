@@ -12,7 +12,7 @@ export const FIREBASE = {
 
 // Service d'envoi (Railway) : lit le Google Sheet client et envoie les e-mails au nom du compte ci-dessous.
 // Vide = utilisation du compte Google de la personne connectée.
-export const API_URL = '';
+export const API_URL = 'https://reussites-orpi-production.up.railway.app';
 export const COMPTE_ENVOI = 'celia@smartshop.fr';
 
 // Collections Firestore de l'outil (préfixées pour cohabiter avec les autres outils du projet).
