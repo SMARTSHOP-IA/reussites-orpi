@@ -214,3 +214,4 @@ pre.mail { white-space: pre-wrap; background: #f6f7f9; border: 1px solid var(--l
 .expe input[type=date] { width: 132px; }
 .expe select { max-width: 130px; }
 .expe input[name=numero] { width: 140px; }
+.filtres-actifs { font-size: 13px; color: var(--doux); margin: -4px 0 10px; }

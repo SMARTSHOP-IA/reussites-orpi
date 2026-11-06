@@ -15,11 +15,15 @@ const FILTRES_ETAT = [
 
 export function vueRecompenses(root, ctx) {
   const { etat, M, lecture } = ctx;
+  const filtresActifs = () => [
+    F.gie && `GIE ${F.gie}`, F.metal, F.ref && `réf. ${M.num[F.ref] ?? ''}`, F.texte && `« ${F.texte} »`,
+    F.etat && (FILTRES_ETAT.find(([k]) => k === F.etat)?.[1] || F.etat),
+  ].filter(Boolean).map(t => `<b>${h(t)}</b>`).join(' · ');
   if (ctx.navigation) {
     ctx.navigation = false;
     const f = paramHash('f'); const g = paramHash('g');
-    if (f) { F.etat = f === 'pb' ? 'pb' : f; F.page = 0; }
-    if (g !== null) { F.gie = g; F.page = 0; }
+    // Un lien (GIE, tableau de bord, journal…) repart de filtres vides puis applique les siens
+    if (f !== null || g !== null) Object.assign(F, { texte: '', gie: g || '', metal: '', ref: '', etat: f || '', page: 0 });
   }
   const txt = norm(F.texte);
   const liste = M.lignes.filter(x => {
@@ -62,6 +66,7 @@ export function vueRecompenses(root, ctx) {
       ${selectHtml('ref', refsOpt, F.ref, 'id="f-ref"')}
       ${selectHtml('etat', FILTRES_ETAT, F.etat, 'id="f-etat"')}
     </div>
+    ${filtresActifs() ? `<div class="filtres-actifs">Filtres actifs : ${filtresActifs()} <button class="btn petit lien" id="effacer">Effacer les filtres</button></div>` : ''}
     <div class="legende"><span class="l-erreur-ex">Bloquant</span><span class="l-alerte-ex">À vérifier</span><span class="corrige-ex">Corrigé à la main</span><span class="conflit-ex">Conflit</span></div>
     ${deuxAdresses && !lecture ? `<div class="barre-actions">Livraison en 2 adresses pour ce GIE. Lignes cochées → ${gieFiltre.adresses.map((a, i) => `<button class="btn petit" data-adr="${i}">${h(a.libelle || `Adresse ${i + 1}`)}</button>`).join(' ')} <button class="btn petit lien" data-adr="">Retirer l'adresse</button></div>` : ''}
     <div class="table-defile"><table class="table dense">
@@ -78,11 +83,12 @@ export function vueRecompenses(root, ctx) {
         ${deuxAdresses ? `<td>${h(gieFiltre.adresses[x.l.adresseIdx]?.libelle || '')}</td>` : ''}
         <td>${badgeProd(x.prod)}</td>
         <td>${badgesProblemes(x.pb)}</td>
-      </tr>`).join('') || `<tr><td colspan="11" class="vide">Aucune ligne ne correspond aux filtres.</td></tr>`}</tbody>
+      </tr>`).join('') || `<tr><td colspan="11" class="vide">Aucune ligne ne correspond aux filtres${filtresActifs() ? ` (${filtresActifs()})` : ''}.</td></tr>`}</tbody>
     </table></div>
     ${pages > 1 ? `<div class="pagination"><button class="btn petit" id="prec" ${F.page === 0 ? 'disabled' : ''}>‹ Précédent</button><span>Page ${F.page + 1} / ${pages}</span><button class="btn petit" id="suiv" ${F.page >= pages - 1 ? 'disabled' : ''}>Suivant ›</button></div>` : ''}`;
 
   const maj = () => vueRecompenses(root, ctx);
+  root.querySelector('#effacer')?.addEventListener('click', () => { Object.assign(F, { texte: '', gie: '', metal: '', ref: '', etat: '', page: 0 }); maj(); });
   let t;
   root.querySelector('#f-texte').oninput = e => { clearTimeout(t); t = setTimeout(() => { F.texte = e.target.value; F.page = 0; maj(); root.querySelector('#f-texte').focus(); const v = root.querySelector('#f-texte'); v.setSelectionRange(v.value.length, v.value.length); }, 250); };
   root.querySelector('#f-gie').onchange = e => { F.gie = e.target.value; F.page = 0; maj(); };
