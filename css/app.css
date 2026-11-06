@@ -284,3 +284,13 @@ pre.mail{white-space:pre-wrap;background:var(--paper);box-shadow:var(--inset-sm)
   .grille-form{grid-template-columns:1fr}
   .carte-form{margin:0;border-radius:0;padding:20px}
 }
+
+/* annuaire */
+.annuaire td{vertical-align:middle}
+.annuaire td.gie{min-width:190px}
+.annuaire input{width:100%;min-width:96px;padding:7px 10px;font-size:13.5px}
+.annuaire input[name=email],.annuaire input[name=cc]{min-width:190px}
+input.manquant{box-shadow:var(--inset-sm),inset 0 -2px 0 var(--warn)}
+input.invalide{box-shadow:var(--inset-sm),inset 0 0 0 2px var(--magenta)}
+input.enregistre{box-shadow:var(--inset-sm),inset 0 -3px 0 var(--ok);transition:box-shadow .3s}
+label.btn{display:inline-flex;cursor:pointer;color:#fff}

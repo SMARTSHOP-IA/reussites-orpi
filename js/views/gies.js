@@ -1,6 +1,6 @@
 import { h, dateFr, panneau, fermerPanneau, selectHtml, modale, toast, confirmer } from '../ui.js';
 import { agir, paramHash, compteMetaux, badgeForm, badgeExpe, pastille } from './commun.js';
-import { majGie, ordonnerGies, envoyerFormulaire, validerReponse, agencesDuGie, affecterAdresse, lienFormulaire } from '../actions.js';
+import { majContact, majGie, ordonnerGies, envoyerFormulaire, validerReponse, agencesDuGie, affecterAdresse, lienFormulaire } from '../actions.js';
 import { store } from '../store.js';
 import { STATUTS_BAT } from '../model.js';
 import { MODE, COMPTE_ENVOI } from '../config.js';
@@ -126,6 +126,9 @@ export async function ouvrirGie(ctx, code) {
         <label>Nom<input name="nom" value="${h(G.contact?.nom)}" ${dis}></label>
         <label>Téléphone<input name="tel" value="${h(G.contact?.tel)}" ${dis}></label>
         <label>E-mail <small>(destinataire du formulaire)</small><input name="email" type="text" value="${h(G.contact?.email)}" ${dis} placeholder="contact@orpi.com"></label>
+        <label>Fonction<input name="fonction" value="${h(G.contact?.fonction)}" ${dis}></label>
+        <label>E-mail en copie <small>(facultatif)</small><input name="cc" type="text" value="${h(G.contact?.cc)}" ${dis} placeholder="autre@orpi.com"></label>
+        <p class="petit-texte large">Ces coordonnées sont aussi modifiables dans l'<a href="#/annuaire">Annuaire</a>.</p>
       </div></section>
       <section class="bloc"><h3>Livraison</h3><div class="grille-form">
         <label>Date de livraison souhaitée<input type="date" name="dateSouhaitee" value="${h(/^\d{4}-\d{2}-\d{2}$/.test(G.dateSouhaitee || '') ? G.dateSouhaitee : '')}" ${dis}></label>
@@ -165,8 +168,8 @@ export async function ouvrirGie(ctx, code) {
       const n = Number(d.nbAdresses || 1);
       const adresses = Array.from({ length: n }, (_, i) => ({ libelle: d[`a${i}_libelle`] || '', texte: d[`a${i}_texte`] || '', contactSurPlace: d[`a${i}_contact`] || '', tel: d[`a${i}_tel`] || '' }));
       agir(async () => {
+        await majContact(code, { prenom: d.prenom, nom: d.nom, tel: d.tel, email: d.email, fonction: d.fonction, cc: d.cc });
         await majGie(code, {
-          contact: { prenom: d.prenom, nom: d.nom, tel: d.tel, email: d.email.trim() },
           dateSouhaitee: d.dateSouhaitee, dateConvention: d.dateConvention, souhaitTexte: d.souhaitTexte,
           adresses, commentaires: d.commentaires, diplomes: { ...(G.diplomes || {}), bat: d.bat, ...(d.bat !== G.diplomes?.bat && ['valide', 'imprime'].includes(d.bat) ? { batLe: new Date().toISOString() } : {}) },
         });
@@ -193,7 +196,7 @@ export async function ouvrirGie(ctx, code) {
 
 async function apercuMail(m, token, envoye) {
   await modale(envoye ? 'E-mail préparé (mode démo : rien n\'est envoyé)' : 'Aperçu de l\'e-mail', `
-    <p><b>De :</b> ${h(COMPTE_ENVOI)}<br><b>À :</b> ${h(m.a)}<br><b>Objet :</b> ${h(m.objet)}</p>
+    <p><b>De :</b> ${h(COMPTE_ENVOI)}<br><b>À :</b> ${h(m.a)}${m.cc ? `<br><b>Copie :</b> ${h(m.cc)}` : ''}<br><b>Objet :</b> ${h(m.objet)}</p>
     <pre class="mail">${h(m.corps)}</pre>
     ${envoye ? `<p class="petit-texte">En production, cet e-mail part de la boîte ${h(COMPTE_ENVOI)}. <a href="${lienFormulaire(token)}" target="_blank">Ouvrir le formulaire comme le contact GIE</a></p>` : '<p class="petit-texte">Le texte se modifie dans Paramètres.</p>'}`);
 }

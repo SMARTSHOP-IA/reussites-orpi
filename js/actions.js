@@ -151,6 +151,58 @@ export async function majGie(code, modifs, libelleJournal) {
   if (libelleJournal) await store.journaliser([{ date: maintenant(), auteur: auteur(), type: 'gie', gie: code, nom: g.nom, changements: [{ champ: 'gie', avant: '', apres: libelleJournal }], trophee: false }]);
 }
 
+// ======================================================== Annuaire
+export const CHAMPS_CONTACT = { prenom: 'Prénom', nom: 'Nom', fonction: 'Fonction', tel: 'Téléphone', email: 'E-mail', cc: 'E-mail en copie' };
+export const emailValide = v => !v || String(v).split(/[,;]\s*/).every(x => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x.trim()));
+
+export async function majContact(code, modifs, { journal = true } = {}) {
+  verifierDroits();
+  const g = copie(E().gies[code]);
+  const avant = { ...(g.contact || {}) };
+  const contact = { ...avant };
+  const changements = [];
+  for (const [k, v] of Object.entries(modifs)) {
+    if (!(k in CHAMPS_CONTACT)) continue;
+    const val = String(v ?? '').trim();
+    if ((avant[k] || '') === val) continue;
+    if ((k === 'email' || k === 'cc') && !emailValide(val)) throw new Error(`Adresse e-mail invalide : ${val}`);
+    contact[k] = val;
+    changements.push({ champ: k, avant: avant[k] || '', apres: val });
+  }
+  if (!changements.length) return 0;
+  g.contact = contact;
+  await store.ecrire([{ type: 'set', coll: 'gies', id: code, data: g }]);
+  if (journal) await store.journaliser([{ date: maintenant(), auteur: auteur(), type: 'gie', gie: code, nom: g.nom, changements: changements.map(c => ({ ...c, champ: `Contact – ${CHAMPS_CONTACT[c.champ]}` })), trophee: false }]);
+  return changements.length;
+}
+
+// lignes : [{ code, prenom, nom, fonction, tel, email, cc }] — seuls les champs renseignés sont appliqués
+export async function importerContacts(lignes, origine) {
+  verifierDroits();
+  const etat = E();
+  const ops = [];
+  const inconnus = [];
+  const invalides = [];
+  let maj = 0;
+  for (const l of lignes) {
+    const code = normGie(l.code);
+    if (!etat.gies[code]) { if (code) inconnus.push(code); continue; }
+    const g = copie(etat.gies[code]);
+    const contact = { ...(g.contact || {}) };
+    let change = false;
+    for (const k of Object.keys(CHAMPS_CONTACT)) {
+      const v = String(l[k] ?? '').trim();
+      if (!v || contact[k] === v) continue;
+      if ((k === 'email' || k === 'cc') && !emailValide(v)) { invalides.push(`${code} : ${v}`); continue; }
+      contact[k] = v; change = true;
+    }
+    if (change) { g.contact = contact; ops.push({ type: 'set', coll: 'gies', id: code, data: g }); maj++; }
+  }
+  await store.ecrire(ops);
+  if (maj) await store.journaliser([{ date: maintenant(), auteur: auteur(), type: 'gie', gie: '', nom: 'Annuaire', changements: [{ champ: 'Annuaire', avant: '', apres: `${maj} contact(s) GIE mis à jour par import (${origine})` }], trophee: false }]);
+  return { maj, inconnus, invalides };
+}
+
 export async function ordonnerGies(codes) {
   verifierDroits();
   const ops = codes.map((c, i) => ({ type: 'set', coll: 'gies', id: c, data: { ...copie(E().gies[c]), priorite: i + 1 } }))
@@ -191,7 +243,7 @@ export async function envoyerFormulaire(code, { relance = false, previsualiser =
   const token = g.formulaire?.token || jeton();
   const p = etat.parametres;
   const v = { prenom: g.contact.prenom || '', nom: g.contact.nom || '', gie: `${code} – ${g.nom}`, nb, lien: lienFormulaire(token), edition: p.edition, expediteur: p.expediteurNom || auteur() };
-  const message = { a: g.contact.email, objet: remplir(relance ? p.relanceObjet : p.mailObjet, v), corps: remplir(relance ? p.relanceCorps : p.mailCorps, v) };
+  const message = { a: g.contact.email, cc: g.contact.cc || '', objet: remplir(relance ? p.relanceObjet : p.mailObjet, v), corps: remplir(relance ? p.relanceCorps : p.mailCorps, v) };
   if (previsualiser) return { message, token };
   const existant = await store.lireFormulaire(token);
   await store.ecrireFormulaire(token, {

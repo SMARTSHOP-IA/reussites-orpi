@@ -18,6 +18,7 @@ Un seul outil remplace les trois fichiers suivants :
 | Diplômes | Statut du BAT par région, liste exportable, diplômes à revoir après un changement. Le générateur de diplômes sera ajouté plus tard. |
 | Références trophées | Une liste par métal. On peut modifier, ajouter, réordonner ; la numérotation se recalcule toute seule. Règles d'attribution : catégorie du fichier client + civilité. |
 | Journal | Toutes les lignes ajoutées, modifiées ou supprimées (par le client ou à la main), plus les actions de suivi. Export Excel. |
+| Annuaire | Contacts des GIE (prénom, nom, fonction, téléphone, e-mail, e-mail en copie), modifiables directement dans la liste ou par import Excel/CSV. Mêmes données que la fiche du GIE. |
 | Paramètres | Lien du Google Sheet, import manuel (Excel ou CSV), textes des e-mails, accès cliente et usine, éditions, sauvegarde. |
 
 **Synchronisation** : le Google Sheet de la cliente est relu à chaque ouverture de l'outil. Les écarts sont appliqués tout de suite et tracés dans le journal :
