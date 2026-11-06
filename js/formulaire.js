@@ -2,6 +2,7 @@
 import { MODE } from './config.js';
 import { store, implFormulaireFirestore } from './store.js';
 import { h, toast } from './ui.js';
+import { LOGO } from './logo.js';
 
 const zone = document.getElementById('form');
 const token = new URLSearchParams(location.search).get('t');
@@ -41,7 +42,7 @@ async function demarrer() {
     </div></fieldset>`;
 
   zone.innerHTML = `
-    <header class="entete-form"><span class="logo">R</span><div><h1>Réussites Orpi ${h(f.edition)}</h1><p>${h(f.gie)} – ${h(f.gieNom)} · <strong>${f.nb} trophées</strong> à livrer en une seule fois</p></div></header>
+    <header class="entete-form"><div class="logo-wrap">${LOGO}</div><div><h1>Réussites Orpi ${h(f.edition)}</h1><p>${h(f.gie)} – ${h(f.gieNom)} · <strong>${f.nb} trophées</strong> à livrer en une seule fois</p></div></header>
     ${valide ? '<div class="encart vert">Ces informations ont été validées par Smartshop. Pour toute modification, répondez directement à l\'e-mail reçu.</div>' : f.statut === 'repondu' ? '<div class="encart bleu">Merci, votre réponse a bien été reçue. Vous pouvez encore la modifier ci-dessous.</div>' : '<p>Merci d\'indiquer la date de livraison souhaitée, l\'adresse de livraison et la personne qui réceptionnera les trophées.</p>'}
     <form id="f" class="pile">
       <label class="date">Date de livraison souhaitée<input type="date" name="date" value="${h(r.date || f.dateSouhaitee || '')}" required ${dis}></label>
@@ -81,7 +82,7 @@ async function demarrer() {
     }
     try {
       await impl.repondreFormulaire(token, { date: d.date, adresses, affectations, commentaire: d.commentaire || '' });
-      zone.innerHTML = `<header class="entete-form"><span class="logo">R</span><div><h1>Merci !</h1><p>Vos informations de livraison pour ${h(f.gieNom)} ont bien été transmises à Smartshop.</p></div></header><p>Vous pouvez rouvrir ce lien pour les modifier tant qu'elles n'ont pas été validées.</p>`;
+      zone.innerHTML = `<header class="entete-form"><div class="logo-wrap">${LOGO}</div><div><h1>Merci !</h1><p>Vos informations de livraison pour ${h(f.gieNom)} ont bien été transmises à Smartshop.</p></div></header><p>Vous pouvez rouvrir ce lien pour les modifier tant qu'elles n'ont pas été validées.</p>`;
     } catch (e) {
       toast(`Envoi impossible : ${h(e.message)}`, 'erreur', 8000);
     }

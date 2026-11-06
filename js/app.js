@@ -2,6 +2,19 @@ import { MODE, EDITION_PAR_DEFAUT, API_URL } from './config.js';
 import { store } from './store.js';
 import { calculer } from './model.js';
 import { h, toast, nombre, dateFr } from './ui.js';
+import { LOGO } from './logo.js';
+
+const ICONES = {"tableau": "<path d=\"M3 11.5 12 4l9 7.5\"/><path d=\"M5 10v10h5v-6h4v6h5V10\"/>", "recompenses": "<path d=\"M8 4h8v5a4 4 0 0 1-8 0z\"/><path d=\"M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4\"/><path d=\"M12 13v4M8 20h8M9.5 17h5\"/>", "gies": "<path d=\"M12 21s-6-5.6-6-11a6 6 0 0 1 12 0c0 5.4-6 11-6 11z\"/><circle cx=\"12\" cy=\"10\" r=\"2.3\"/>", "productions": "<path d=\"M3 20V10l5 3V10l5 3V7l8 4v9z\"/><path d=\"M3 20h18\"/>", "expeditions": "<path d=\"M3 7h11v9H3z\"/><path d=\"M14 10h4l3 3v3h-7\"/><circle cx=\"7\" cy=\"17.5\" r=\"1.8\"/><circle cx=\"17\" cy=\"17.5\" r=\"1.8\"/>", "diplomes": "<path d=\"M5 4h14v12H5z\"/><path d=\"M8 8h8M8 11h5\"/><path d=\"m10 16-1 5 3-2 3 2-1-5\"/>", "references": "<path d=\"M4 9h16M4 15h16M10 3 8 21M16 3l-2 18\"/>", "journal": "<path d=\"M6 3h12v18H6z\"/><path d=\"M9 8h6M9 12h6M9 16h4\"/>", "parametres": "<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z\"/>"};
+const icone = k => `<span class="ico"><svg viewBox="0 0 24 24">${ICONES[k] || ''}</svg></span>`;
+
+// Mode sombre : même réglage que les autres outils Smartshop (clé ss-theme)
+function appliquerTheme(t, sauver) {
+  document.documentElement.dataset.theme = t;
+  const sw = document.getElementById('themeSw');
+  if (sw) sw.checked = t === 'dark';
+  if (sauver) { try { localStorage.setItem('ss-theme', t); } catch { /* ignore */ } }
+}
+(() => { let t = null; try { t = localStorage.getItem('ss-theme'); } catch { /* ignore */ } appliquerTheme(t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'), false); })();
 import { utilisateurCourant, connexionDemo, connexionGoogle, envoyerLienConnexion, deconnexion, ROLES, jetonGoogle } from './auth.js';
 import { session, synchroniser, lireFichierClientGoogle, verifierReponses } from './actions.js';
 import { vueTableau } from './views/tableau.js';
@@ -62,7 +75,7 @@ function rendre(ev) {
   if (nom !== vuePrecedente) { document.getElementById('panneau')?.remove(); vuePrecedente = nom; }
   const etat = store.etat;
   if (!document.getElementById('contenu')) coquille();
-  document.querySelectorAll('nav a').forEach(a => a.classList.toggle('actif', a.dataset.vue === nom));
+  document.querySelectorAll('nav a').forEach(a => { a.classList.toggle('actif', a.dataset.vue === nom); a.setAttribute('aria-current', a.dataset.vue === nom ? 'true' : 'false'); });
   majBandeau();
   const navigation = !!(ev && ev.type === 'hashchange') || premierRendu;
   premierRendu = false;
@@ -78,13 +91,15 @@ function coquille() {
   const etat = store.etat;
   app.innerHTML = `
     <div class="coquille role-${user.role}">
-      <aside class="menu">
-        <div class="marque"><span class="logo">R</span><div><strong>Réussites Orpi</strong><small>Édition ${h(etat.parametres.edition)}</small></div></div>
-        <nav>${Object.entries(VUES).filter(([, v]) => v.roles.includes(user.role)).map(([k, v]) => `<a href="#/${k}" data-vue="${k}"><span class="ic">${v.icone}</span>${v.titre}<span class="compteur" data-compteur="${k}"></span></a>`).join('')}</nav>
+      <aside class="menu" aria-label="Navigation principale">
+        <div class="logo-wrap">${LOGO}</div>
+        <div class="outil">Réussites Orpi <span>Édition ${h(etat.parametres.edition)}</span></div>
+        <nav>${Object.entries(VUES).filter(([, v]) => v.roles.includes(user.role)).map(([k, v]) => `<a href="#/${k}" data-vue="${k}" class="nav-item">${icone(k)}<span class="lib">${v.titre}</span><span class="compteur" data-compteur="${k}"></span></a>`).join('')}</nav>
+        <div class="spacer"></div>
         <div class="pied-menu">
           ${MODE === 'demo' ? '<div class="demo">Mode démo – données 2026</div>' : ''}
-          <div class="qui"><strong>${h(user.nom)}</strong><small>${h(ROLES[user.role])}</small></div>
-          <button class="btn lien" id="btn-deco">Se déconnecter</button>
+          <label class="theme-sw" title="Mode sombre"><input type="checkbox" id="themeSw" aria-label="Mode sombre"><span class="tr"><span class="kn"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></span><span class="lbl"></span></span><span class="tx">Mode sombre</span></label>
+          <div class="user-chip"><span title="${h(user.email)}"><strong>${h(user.nom)}</strong><small>${h(ROLES[user.role])}</small></span><button class="btn petit" id="btn-deco" title="Se déconnecter">Sortir</button></div>
         </div>
       </aside>
       <main>
@@ -93,6 +108,9 @@ function coquille() {
       </main>
     </div>`;
   document.getElementById('btn-deco').onclick = async () => { await deconnexion(); location.reload(); };
+  const sw = document.getElementById('themeSw');
+  sw.checked = document.documentElement.dataset.theme === 'dark';
+  sw.onchange = () => appliquerTheme(sw.checked ? 'dark' : 'light', true);
 }
 
 function majBandeau() {
@@ -149,7 +167,8 @@ function ecranConnexion(erreur = '') {
   app.innerHTML = `
     <div class="connexion">
       <div class="carte">
-        <div class="marque"><span class="logo">R</span><div><strong>Réussites Orpi</strong><small>Trophées, productions et livraisons</small></div></div>
+        <div class="logo-wrap">${LOGO}</div>
+        <h1>Réussites Orpi</h1><p class="sous-titre">Trophées, productions et livraisons</p>
         ${erreur ? `<p class="alerte-texte">${erreur}</p>` : ''}
         ${MODE === 'demo' ? `
           <p>Mode démo : les données 2026 sont chargées dans ce navigateur. Choisissez un profil pour tester l'outil.</p>
