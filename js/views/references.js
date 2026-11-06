@@ -46,12 +46,13 @@ function editer(ctx, id, defaut = {}) {
   const { etat, M } = ctx;
   const r = id ? etat.references[id] : { metal: defaut.metal || 'Or', libelle: defaut.libelle || '', regles: defaut.regles || [{ cat: '', civ: '*' }] };
   const categories = [...new Set(M.lignes.map(x => x.e.categorie).filter(Boolean))].sort();
-  const regleHtml = (g, i) => `<div class="regle" data-i="${i}"><input name="cat" list="cats-ref" value="${h(g.cat)}" placeholder="Catégorie du fichier client"> ${selectHtml('civ', Object.entries(CIV), g.civ || '*')} <button type="button" class="btn-icone" data-retirer>✕</button></div>`;
+  const regleHtml = (g, i) => `<div class="regle" data-i="${i}"><input name="cat" list="cats-ref" value="${h(g.cat)}" placeholder="ex. Conseiller en transaction" title="${h(g.cat)}">${selectHtml('civ', Object.entries(CIV), g.civ || '*')}<button type="button" class="btn-icone" data-retirer title="Retirer cette règle">✕</button></div>`;
   panneau(id ? `Référence ${M.num[id]}` : 'Nouvelle référence', `
     <form id="f-ref" class="pile">
       <label>Métal${selectHtml('metal', METAUX.map(m => [m, m]), r.metal)}</label>
       <label>Libellé du trophée<input name="libelle" value="${h(r.libelle)}" required></label>
       <div><strong>Règles d'attribution</strong><p class="petit-texte">Une ligne du fichier client reçoit cette référence si sa catégorie et son métal correspondent (et la civilité si elle est précisée).</p>
+        <div class="regles-entete"><span>Catégorie du fichier client</span><span>Civilité</span><span></span></div>
         <div id="regles">${(r.regles || []).map(regleHtml).join('')}</div>
         <datalist id="cats-ref">${categories.map(c => `<option value="${h(c)}">`).join('')}</datalist>
         <button type="button" class="btn petit" id="plus">+ Ajouter une règle</button></div>
