@@ -133,7 +133,7 @@ for (const m of diff.modifications) {
   const a = m.apres;
   const changements = [];
   if (a.nom !== l.src.nom) { l.ovr.nom = a.nom; changements.push({ champ: 'nom', avant: l.src.nom, apres: a.nom }); }
-  if (normCiv(a.civilite) !== normCiv(l.src.civilite)) { l.ovr.civilite = a.civilite; changements.push({ champ: 'civilite', avant: l.src.civilite, apres: a.civilite }); }
+  if (normCiv(a.civilite) && normCiv(a.civilite) !== normCiv(l.src.civilite)) { l.ovr.civilite = a.civilite; changements.push({ champ: 'civilite', avant: l.src.civilite, apres: a.civilite }); }
   if (catCle(a.categorie).cle !== catCle(l.src.categorie).cle) { l.ovr.categorie = a.categorie; changements.push({ champ: 'categorie', avant: l.src.categorie, apres: a.categorie }); }
   if (normMetal(a.recompense) !== normMetal(l.src.recompense)) { l.ovr.recompense = a.recompense; changements.push({ champ: 'recompense', avant: l.src.recompense, apres: a.recompense }); }
   affecterAdresse(l, a);
