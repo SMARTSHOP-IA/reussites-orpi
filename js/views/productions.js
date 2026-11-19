@@ -67,7 +67,7 @@ function recapHtml(etat, M) {
   const lots = Object.values(etat.lots).filter(l => l.statut !== 'brouillon').sort((a, b) => a.numero - b.numero);
   const produitParRef = {};
   for (const x of M.lignes) if (x.active && x.prod === 'produit') produitParRef[x.refId] = (produitParRef[x.refId] || 0) + 1;
-  return `<section class="carte"><h2>Récapitulatif par référence</h2><div class="table-defile"><table class="table dense">
+  return `<section class="carte"><h2>Récapitulatif par référence</h2><div class="table-defile"><table class="table dense sans-tri">
     <thead><tr><th>N°</th><th>Métal</th><th>Trophée</th><th class="num">Total édition</th>${lots.map(l => `<th class="num">Lot ${l.numero}</th>`).join('')}<th class="num">Reste à produire</th></tr></thead>
     <tbody>${M.ordreMetaux.map(m => {
       const rs = M.refsTri.filter(r => r.metal === m);

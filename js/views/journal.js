@@ -2,8 +2,9 @@ import { h, dateFr, selectHtml, nombre } from '../ui.js';
 import { agir, pastille, optionsGie } from './commun.js';
 import { LIBELLES_CHAMPS, norm } from '../logic.js';
 import { TYPES_JOURNAL, exporterJournal } from '../exports.js';
+import { comparateur } from '../tri.js';
 
-const F = { type: '', gie: '', texte: '', trophee: false, page: 0 };
+const F = { type: '', gie: '', texte: '', trophee: false, page: 0, tri: null };
 const PAR_PAGE = 200;
 const CLASSE = { ajout: 'vert', ajout_manuel: 'vert', modification: 'bleu', correction: 'bleu-clair', suppression: 'rouge', suppression_manuelle: 'rouge', retablissement: 'vert', import: 'gris', formulaire: 'violet', production: 'orange', expedition: 'orange', gie: 'gris' };
 
@@ -15,6 +16,10 @@ export function vueJournal(root, ctx) {
     && (!F.trophee || j.trophee)
     && (!txt || norm(`${j.nom} ${j.auteur} ${(j.changements || []).map(c => `${c.avant} ${c.apres}`).join(' ')}`).includes(txt));
   const liste = [...etat.journal].filter(filtre).sort((a, b) => b.date.localeCompare(a.date));
+  if (F.tri) {
+    const ex = { date: j => j.date, type: j => TYPES_JOURNAL[j.type] || j.type, gie: j => j.gie, nom: j => j.nom, detail: j => (j.changements || []).map(c => c.apres).join(' '), auteur: j => j.auteur }[F.tri.col];
+    if (ex) liste.sort(comparateur(ex, F.tri.dir));
+  }
   const pages = Math.max(1, Math.ceil(liste.length / PAR_PAGE));
   F.page = Math.min(F.page, pages - 1);
   const vis = liste.slice(F.page * PAR_PAGE, (F.page + 1) * PAR_PAGE);
@@ -28,8 +33,8 @@ export function vueJournal(root, ctx) {
       ${selectHtml('gie', optionsGie(M), F.gie, 'id="f-gie"')}
       <label class="case"><input type="checkbox" id="f-trophee" ${F.trophee ? 'checked' : ''}> Seulement ce qui change un trophée</label>
     </div>
-    <div class="table-defile"><table class="table dense">
-      <thead><tr><th>Date</th><th>Type</th><th>GIE</th><th>Lauréat / agence</th><th>Détail</th><th>Par</th></tr></thead>
+    <div class="table-defile"><table class="table dense" data-tri-donnees>
+      <thead><tr>${[['date', 'Date'], ['type', 'Type'], ['gie', 'GIE'], ['nom', 'Lauréat / agence'], ['detail', 'Détail'], ['auteur', 'Par']].map(([k, l]) => `<th class="triable ${F.tri?.col === k ? (F.tri.dir === 1 ? 'tri-asc' : 'tri-desc') : ''}" data-col="${k}" tabindex="0" title="Cliquer pour trier">${l}</th>`).join('')}</tr></thead>
       <tbody>${vis.map(j => `<tr class="${j.ligneId ? 'cliquable' : ''}" data-ligne="${j.ligneId || ''}" data-gie="${h(j.gie || '')}">
         <td class="nowrap">${dateFr(j.date, true)}</td>
         <td>${pastille(TYPES_JOURNAL[j.type] || j.type, CLASSE[j.type] || 'gris')}${j.dejaProduit ? `<br>${pastille('Trophée déjà produit', 'orange')}` : ''}</td>
@@ -47,6 +52,15 @@ export function vueJournal(root, ctx) {
   root.querySelector('#f-type').onchange = e => { F.type = e.target.value; F.page = 0; maj(); };
   root.querySelector('#f-gie').onchange = e => { F.gie = e.target.value; F.page = 0; maj(); };
   root.querySelector('#f-trophee').onchange = e => { F.trophee = e.target.checked; F.page = 0; maj(); };
+  root.querySelectorAll('th[data-col]').forEach(th => {
+    const basculer = () => {
+      const k = th.dataset.col;
+      F.tri = !F.tri || F.tri.col !== k ? { col: k, dir: 1 } : F.tri.dir === 1 ? { col: k, dir: -1 } : null;
+      F.page = 0; maj();
+    };
+    th.onclick = basculer;
+    th.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); basculer(); } };
+  });
   root.querySelector('#prec')?.addEventListener('click', () => { F.page--; maj(); });
   root.querySelector('#suiv')?.addEventListener('click', () => { F.page++; maj(); });
   root.querySelector('#export').onclick = () => agir(() => exporterJournal(etat, filtre));

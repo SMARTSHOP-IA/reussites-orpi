@@ -3,6 +3,7 @@ import { store } from './store.js';
 import { calculer } from './model.js';
 import { h, toast, nombre, dateFr } from './ui.js';
 import { LOGO } from './logo.js';
+import { activerTris } from './tri.js';
 
 const ICONES = {"tableau": "<path d=\"M3 11.5 12 4l9 7.5\"/><path d=\"M5 10v10h5v-6h4v6h5V10\"/>", "recompenses": "<path d=\"M8 4h8v5a4 4 0 0 1-8 0z\"/><path d=\"M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4\"/><path d=\"M12 13v4M8 20h8M9.5 17h5\"/>", "annuaire": "<path d=\"M6 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6z\"/><path d=\"M4 7h3M4 12h3M4 17h3\"/><circle cx=\"12.5\" cy=\"10\" r=\"2.3\"/><path d=\"M9 16a3.5 3.5 0 0 1 7 0\"/>", "gies": "<path d=\"M12 21s-6-5.6-6-11a6 6 0 0 1 12 0c0 5.4-6 11-6 11z\"/><circle cx=\"12\" cy=\"10\" r=\"2.3\"/>", "productions": "<path d=\"M3 20V10l5 3V10l5 3V7l8 4v9z\"/><path d=\"M3 20h18\"/>", "expeditions": "<path d=\"M3 7h11v9H3z\"/><path d=\"M14 10h4l3 3v3h-7\"/><circle cx=\"7\" cy=\"17.5\" r=\"1.8\"/><circle cx=\"17\" cy=\"17.5\" r=\"1.8\"/>", "diplomes": "<path d=\"M5 4h14v12H5z\"/><path d=\"M8 8h8M8 11h5\"/><path d=\"m10 16-1 5 3-2 3 2-1-5\"/>", "references": "<path d=\"M4 9h16M4 15h16M10 3 8 21M16 3l-2 18\"/>", "journal": "<path d=\"M6 3h12v18H6z\"/><path d=\"M9 8h6M9 12h6M9 16h4\"/>", "parametres": "<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z\"/>"};
 const icone = k => `<span class="ico"><svg viewBox="0 0 24 24">${ICONES[k] || ''}</svg></span>`;
@@ -60,6 +61,7 @@ async function demarrer() {
     attente = setTimeout(() => { M = calculer(store.etat); rendre(null); }, 30);
   });
   window.addEventListener('hashchange', rendre);
+  activerTris();
   rendre();
   if (user.role === 'equipe') verificationAuto();
 }
@@ -74,6 +76,7 @@ let vuePrecedente = null;
 let premierRendu = true;
 function rendre(ev) {
   const nom = vueCourante();
+  document.body.dataset.vue = nom;
   if (nom !== vuePrecedente) { document.getElementById('panneau')?.remove(); vuePrecedente = nom; }
   const etat = store.etat;
   if (!document.getElementById('contenu')) coquille();

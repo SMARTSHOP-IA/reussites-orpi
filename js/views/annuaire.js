@@ -60,7 +60,7 @@ export function vueAnnuaire(root, ctx) {
       <thead><tr><th>Prio.</th><th>GIE</th><th>Prénom</th><th>Nom</th><th>Fonction</th><th>Téléphone</th><th>E-mail</th><th>E-mail en copie</th><th>Formulaire</th><th></th></tr></thead>
       <tbody>${liste.map(g => `<tr data-gie="${g.code}">
         <td class="num">${g.gie.priorite || ''}</td>
-        <td class="gie"><strong>${g.code}</strong> ${h(g.gie.nom)}<br><small>${g.total} trophée(s)</small></td>
+        <td class="gie" data-tri="${g.code}"><strong>${g.code}</strong> ${h(g.gie.nom)}<br><small>${g.total} trophée(s)</small></td>
         <td>${champ(g, 'prenom')}</td>
         <td>${champ(g, 'nom')}</td>
         <td>${champ(g, 'fonction')}</td>

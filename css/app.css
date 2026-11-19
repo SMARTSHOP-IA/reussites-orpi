@@ -295,3 +295,14 @@ input.manquant{box-shadow:var(--inset-sm),inset 0 -2px 0 var(--warn)}
 input.invalide{box-shadow:var(--inset-sm),inset 0 0 0 2px var(--magenta)}
 input.enregistre{box-shadow:var(--inset-sm),inset 0 -3px 0 var(--ok);transition:box-shadow .3s}
 label.btn{display:inline-flex;cursor:pointer;color:#fff}
+
+/* tri des colonnes */
+.table th.triable{cursor:pointer;user-select:none;padding-right:22px;position:relative}
+.table th.triable:hover{color:var(--ink)}
+.table th.triable::after{content:"↕";position:absolute;right:7px;opacity:.3;font-size:11px}
+.table th.tri-asc,.table th.tri-desc{color:var(--cyan-deep)}
+:root[data-theme="dark"] .table th.tri-asc,:root[data-theme="dark"] .table th.tri-desc{color:var(--teal-ink)}
+.table th.tri-asc::after{content:"▲";opacity:1}
+.table th.tri-desc::after{content:"▼";opacity:1}
+.table th.num.triable{padding-right:22px}
+table.trie .poignee{visibility:hidden}

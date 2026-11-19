@@ -3,8 +3,12 @@ import { agir, paramHash, badgesProblemes, badgeProd, optionsGie } from './commu
 import { PROBLEMES, LIBELLES_CHAMPS, METAUX, norm, normNom, normMetal, effectif } from '../logic.js';
 import { corrigerLigne, resoudreConflit, forcerReference, supprimerLigne, ajouterLigne, affecterAdresse } from '../actions.js';
 import { TYPES_JOURNAL } from '../exports.js';
+import { comparateur } from '../tri.js';
+import { ETATS_PROD } from '../model.js';
 
-const F = { texte: '', gie: '', metal: '', ref: '', etat: '', page: 0 };
+const F = { texte: '', gie: '', metal: '', ref: '', etat: '', page: 0, tri: null };
+const RANG_METAL = { Platine: 1, Or: 2, Argent: 3, Bronze: 4 };
+const RANG_NIVEAU = { erreur: 1, alerte: 2, info: 3 };
 const PAR_PAGE = 150;
 
 const FILTRES_ETAT = [
@@ -42,6 +46,14 @@ export function vueRecompenses(root, ctx) {
     if (txt && !norm(`${x.e.nom} ${x.agence} ${x.e.categorie} ${x.gie} ${x.e.codeAgence}`).includes(txt)) return false;
     return true;
   }).sort((a, b) => (a.gie.localeCompare(b.gie)) || ((a.num || 999) - (b.num || 999)) || a.agence.localeCompare(b.agence));
+  if (F.tri) {
+    const ex = {
+      gie: x => x.gie, agence: x => x.agence, civilite: x => x.e.civilite, nom: x => x.e.nom, categorie: x => x.e.categorie,
+      metal: x => RANG_METAL[x.metal] ?? '', ref: x => x.num ?? '', adresse: x => etat.gies[x.gie]?.adresses?.[x.l.adresseIdx]?.libelle || '',
+      prod: x => ETATS_PROD[x.prod]?.libelle || '', pb: x => RANG_NIVEAU[x.niveau] ?? '',
+    }[F.tri.col];
+    if (ex) liste.sort(comparateur(ex, F.tri.dir));
+  }
   const pages = Math.max(1, Math.ceil(liste.length / PAR_PAGE));
   F.page = Math.min(F.page, pages - 1);
   const vis = liste.slice(F.page * PAR_PAGE, (F.page + 1) * PAR_PAGE);
@@ -69,8 +81,8 @@ export function vueRecompenses(root, ctx) {
     ${filtresActifs() ? `<div class="filtres-actifs">Filtres actifs : ${filtresActifs()} <button class="btn petit lien" id="effacer">Effacer les filtres</button></div>` : ''}
     <div class="legende"><span class="l-erreur-ex">Bloquant</span><span class="l-alerte-ex">À vérifier</span><span class="corrige-ex">Corrigé à la main</span><span class="conflit-ex">Conflit</span></div>
     ${deuxAdresses && !lecture ? `<div class="barre-actions">Livraison en 2 adresses pour ce GIE. Lignes cochées → ${gieFiltre.adresses.map((a, i) => `<button class="btn petit" data-adr="${i}">${h(a.libelle || `Adresse ${i + 1}`)}</button>`).join(' ')} <button class="btn petit lien" data-adr="">Retirer l'adresse</button></div>` : ''}
-    <div class="table-defile"><table class="table dense">
-      <thead><tr>${deuxAdresses && !lecture ? '<th><input type="checkbox" id="tout"></th>' : ''}<th>GIE</th><th>Agence</th><th>Civ.</th><th>Nom</th><th>Catégorie (fichier client)</th><th>Métal</th><th>Référence trophée</th>${deuxAdresses ? '<th>Adresse</th>' : ''}<th>Production</th><th>Incohérences</th></tr></thead>
+    <div class="table-defile"><table class="table dense" data-tri-donnees>
+      <thead><tr>${deuxAdresses && !lecture ? '<th><input type="checkbox" id="tout"></th>' : ''}${[['gie', 'GIE'], ['agence', 'Agence'], ['civilite', 'Civ.'], ['nom', 'Nom'], ['categorie', 'Catégorie (fichier client)'], ['metal', 'Métal'], ['ref', 'Référence trophée'], ...(deuxAdresses ? [['adresse', 'Adresse']] : []), ['prod', 'Production'], ['pb', 'Incohérences']].map(([k, l]) => `<th class="triable ${F.tri?.col === k ? (F.tri.dir === 1 ? 'tri-asc' : 'tri-desc') : ''}" data-col="${k}" tabindex="0" title="Cliquer pour trier">${l}</th>`).join('')}</tr></thead>
       <tbody>${vis.map(x => `<tr class="cliquable ${x.niveau ? `l-${x.niveau}` : ''} ${x.active ? '' : 'l-supprimee'}" data-id="${x.id}">
         ${deuxAdresses && !lecture ? `<td class="coche"><input type="checkbox" data-sel="${x.id}"></td>` : ''}
         ${cellule(x, 'gie', `<strong>${h(x.gie)}</strong>`)}
@@ -95,6 +107,15 @@ export function vueRecompenses(root, ctx) {
   root.querySelector('#f-metal').onchange = e => { F.metal = e.target.value; F.ref = ''; F.page = 0; maj(); };
   root.querySelector('#f-ref').onchange = e => { F.ref = e.target.value; F.page = 0; maj(); };
   root.querySelector('#f-etat').onchange = e => { F.etat = e.target.value; F.page = 0; maj(); };
+  root.querySelectorAll('th[data-col]').forEach(th => {
+    const basculer = () => {
+      const k = th.dataset.col;
+      F.tri = !F.tri || F.tri.col !== k ? { col: k, dir: 1 } : F.tri.dir === 1 ? { col: k, dir: -1 } : null;
+      F.page = 0; maj();
+    };
+    th.onclick = basculer;
+    th.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); basculer(); } };
+  });
   root.querySelector('#prec')?.addEventListener('click', () => { F.page--; maj(); });
   root.querySelector('#suiv')?.addEventListener('click', () => { F.page++; maj(); });
   root.querySelector('#ajout')?.addEventListener('click', () => editer(ctx, null));

@@ -33,11 +33,11 @@ export function vueTableau(root, { etat, M, user }) {
         <tbody>${gies.map(g => `<tr class="cliquable" data-gie="${g.code}">
           <td class="num">${g.gie.priorite || ''}</td>
           <td><strong>${g.code}</strong> ${h(g.gie.nom)}${g.alertes?.length ? ` <span class="avert" title="${h(g.alertes.join('\n'))}">⚠</span>` : ''}</td>
-          <td>${compteMetaux(g.metaux)}</td>
+          <td data-tri="${g.metaux.Platine * 1e6 + g.metaux.Or * 1e3 + g.metaux.Argent}">${compteMetaux(g.metaux)}</td>
           <td class="num"><strong>${g.total}</strong></td>
-          <td>${g.pb.erreur ? pastille(g.pb.erreur, 'rouge') : ''} ${g.pb.alerte ? pastille(g.pb.alerte, 'orange') : ''}</td>
+          <td data-tri="${g.pb.erreur * 1000 + g.pb.alerte || ''}">${g.pb.erreur ? pastille(g.pb.erreur, 'rouge') : ''} ${g.pb.alerte ? pastille(g.pb.alerte, 'orange') : ''}</td>
           <td>${badgeForm(g.gie.formulaire?.statut)}</td>
-          <td>${h(g.gie.dateSouhaitee ? dateFr(g.gie.dateSouhaitee) : g.gie.souhaitTexte || '')}</td>
+          <td data-tri="${h(g.gie.dateSouhaitee || '')}">${h(g.gie.dateSouhaitee ? dateFr(g.gie.dateSouhaitee) : g.gie.souhaitTexte || '')}</td>
           <td>${etatProdGie(g)}</td>
           <td>${badgeExpe(g.expedition)}</td>
         </tr>`).join('')}</tbody>

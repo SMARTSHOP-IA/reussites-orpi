@@ -13,7 +13,7 @@ export function vueGies(root, ctx) {
     .filter(g => !F.texte || `${g.code} ${g.gie.nom} ${g.gie.contact?.nom}`.toLowerCase().includes(F.texte.toLowerCase()));
   const glisser = !lecture && !F.texte && !F.statut;
   root.innerHTML = `
-    <header class="entete"><div><h1>Régions & livraisons</h1><p class="sous-titre">${glisser ? 'Glisse les lignes (ou utilise ▲▼) pour fixer l\'ordre de priorité des livraisons.' : 'Ordre de priorité des livraisons.'}</p></div>
+    <header class="entete"><div><h1>Régions & livraisons</h1><p class="sous-titre">${glisser ? 'Glisse les lignes (ou utilise ▲▼) pour fixer l\'ordre de priorité des livraisons. Un clic sur un titre de colonne trie la liste (le glisser-déposer revient quand le tri est retiré).' : 'Ordre de priorité des livraisons.'}</p></div>
       ${lecture ? '' : '<div class="pile-h"><button class="btn" id="envoi-groupe">Envoyer le formulaire aux GIE cochés</button></div>'}</header>
     <div class="filtres">
       <input type="search" id="f-texte" placeholder="Rechercher un GIE, un contact…" value="${h(F.texte)}">
@@ -29,9 +29,9 @@ export function vueGies(root, ctx) {
           <td class="num"><strong>${G.priorite || ''}</strong></td>
           <td><strong>${g.code}</strong> ${h(G.nom)}${g.alertes?.length ? `<div class="avert-texte">⚠ ${h(g.alertes.join(' · '))}</div>` : ''}</td>
           <td>${h(`${G.contact?.prenom || ''} ${G.contact?.nom || ''}`)}<br><small>${h(G.contact?.email || '')} ${h(G.contact?.tel || '')}</small></td>
-          <td>${compteMetaux(g.metaux)} <strong>${g.total}</strong></td>
+          <td data-tri="${g.total}">${compteMetaux(g.metaux)} <strong>${g.total}</strong></td>
           <td class="adresses">${adr.map(a => `<div><b>${h(a.libelle || '')}</b>${adr.length > 1 || a.texte ? `<br><small>${h((a.texte || '— à compléter').split('\n').slice(0, 3).join(', '))}</small>` : ''}</div>`).join('')}</td>
-          <td>${h(G.dateSouhaitee ? dateFr(G.dateSouhaitee) : G.souhaitTexte || '')}${G.dateConvention ? `<br><small>Convention : ${h(/^\d{4}-/.test(G.dateConvention) ? dateFr(G.dateConvention) : G.dateConvention)}</small>` : ''}</td>
+          <td data-tri="${h(G.dateSouhaitee || '')}">${h(G.dateSouhaitee ? dateFr(G.dateSouhaitee) : G.souhaitTexte || '')}${G.dateConvention ? `<br><small>Convention : ${h(/^\d{4}-/.test(G.dateConvention) ? dateFr(G.dateConvention) : G.dateConvention)}</small>` : ''}</td>
           <td>${badgeForm(G.formulaire?.statut)}${G.formulaire?.relances?.length ? `<br><small>${G.formulaire.relances.length} relance(s)</small>` : ''}</td>
           <td>${badgeExpe(g.expedition)}</td>
         </tr>`;
@@ -59,7 +59,7 @@ export function vueGies(root, ctx) {
   if (glisser) {
     let source = null;
     root.querySelectorAll('tr[draggable]').forEach(tr => {
-      tr.addEventListener('dragstart', e => { source = tr.dataset.gie; tr.classList.add('glisse'); e.dataTransfer.effectAllowed = 'move'; });
+      tr.addEventListener('dragstart', e => { if (tr.closest('table').classList.contains('trie')) { e.preventDefault(); return; } source = tr.dataset.gie; tr.classList.add('glisse'); e.dataTransfer.effectAllowed = 'move'; });
       tr.addEventListener('dragend', () => tr.classList.remove('glisse'));
       tr.addEventListener('dragover', e => { e.preventDefault(); tr.classList.add('survol'); });
       tr.addEventListener('dragleave', () => tr.classList.remove('survol'));
